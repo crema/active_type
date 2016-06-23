@@ -10,6 +10,10 @@ module ActiveType
     include VirtualAttributes
     include NestedAttributes
 
+    def write_attribute(attr, value)
+      write_virtual_attribute(attr, value)
+    end
+
   end
 
 end
