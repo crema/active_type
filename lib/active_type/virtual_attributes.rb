@@ -181,6 +181,28 @@ module ActiveType
       virtual_attributes[name] = value
     end
 
+    # Returns the contents of the record as a nicely formatted string.
+    def inspect
+      inspection = attributes.collect do |name, value|
+        "#{name}: #{VirtualAttributes.attribute_for_inspect(value)}"
+      end.sort.compact.join(", ")
+      "#<#{self.class} #{inspection}>"
+    end
+
+    def self.attribute_for_inspect(value)
+      if value.is_a?(String) && value.length > 50
+        "#{value[0, 50]}...".inspect
+      elsif value.is_a?(Date) || value.is_a?(Time)
+        %("#{value.to_s(:db)}")
+      elsif value.is_a?(Array) && value.size > 10
+        inspected = value.first(10).inspect
+        %(#{inspected[0...-1]}, ...])
+      else
+        value.inspect
+      end
+    end
+
+
     module ClassMethods
 
       def _virtual_column(name)

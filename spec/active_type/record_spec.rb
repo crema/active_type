@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'ostruct'
 
 module RecordSpec
 
@@ -59,11 +60,11 @@ describe ActiveType::Record do
   subject { RecordSpec::Record.new }
 
   it 'is a ActiveRecord::Base' do
-    subject.should be_a(ActiveRecord::Base)
+    expect(subject).to be_a(ActiveRecord::Base)
   end
 
   it 'is an abstract class' do
-    ActiveType::Record.should be_abstract_class
+    expect(ActiveType::Record).to be_abstract_class
   end
 
   describe 'constructors' do
@@ -94,7 +95,7 @@ describe ActiveType::Record do
     it 'is possible to override attributes with super' do
       subject.overridable_test = "test"
 
-      subject.overridable_test.should == "testtest"
+      expect(subject.overridable_test).to eq("testtest")
     end
   end
 
@@ -151,6 +152,24 @@ describe ActiveType::Record do
     end
   end
 
+  describe '#inspect' do
+
+    it 'returns the contents of the object as a nicely formatted string' do
+      t = Time.now
+      subject.persisted_string = "persisted string"
+      subject.virtual_string = "string"
+      subject.persisted_integer = 20
+      subject.virtual_integer = 17
+      subject.virtual_time = t
+      subject.virtual_date = Date.today
+      subject.virtual_boolean = true
+      subject.virtual_attribute = OpenStruct.new({:test => "openstruct"})
+
+      expect(subject.inspect).to eq("#<RecordSpec::Record id: nil, persisted_boolean: nil, persisted_date: nil, persisted_integer: 20, persisted_string: \"persisted string\", persisted_time: nil, virtual_attribute: #<OpenStruct test=\"openstruct\">, virtual_boolean: true, virtual_date: \"#{Date.today}\", virtual_integer: 17, virtual_string: \"string\", virtual_time: \"#{t.to_s(:db)}\">")
+    end
+
+  end
+
   describe '#attributes' do
 
     it 'returns a hash of virtual and persisted attributes' do
@@ -158,7 +177,7 @@ describe ActiveType::Record do
       subject.virtual_string = "string"
       subject.virtual_integer = "17"
 
-      subject.attributes.should == {
+      expect(subject.attributes).to eq({
         "virtual_string" => "string",
         "virtual_integer" => 17,
         "virtual_time" => nil,
@@ -171,7 +190,7 @@ describe ActiveType::Record do
         "persisted_time" => nil,
         "persisted_date" => nil,
         "persisted_boolean" => nil
-      }
+      })
     end
 
   end
@@ -179,8 +198,12 @@ describe ActiveType::Record do
   describe 'validations' do
     subject { RecordSpec::RecordWithValidations.new }
 
-    it { should have(1).error_on(:persisted_string) }
-    it { should have(1).error_on(:virtual_string) }
+    it 'has 1 error_on' do
+      expect(subject.error_on(:persisted_string).size).to eq(1)
+    end
+    it 'has 1 error_on' do
+      expect(subject.error_on(:virtual_string).size).to eq(1)
+    end
   end
 
   describe 'undefined columns' do
@@ -207,9 +230,9 @@ describe ActiveType::Record do
 
     it 'persists to the database' do
       subject.persisted_string = "persisted string"
-      subject.save.should be_true
+      expect(subject.save).to eq(true)
 
-      subject.class.find(subject.id).persisted_string.should == "persisted string"
+      expect(subject.class.find(subject.id).persisted_string).to eq("persisted string")
     end
   end
 
@@ -218,8 +241,8 @@ describe ActiveType::Record do
       record = RecordSpec::Record.new
       other_record = RecordSpec::OtherRecord.new
 
-      record.should_not respond_to(:other_string)
-      other_record.should_not respond_to(:persisted_string)
+      expect(record).not_to respond_to(:other_string)
+      expect(other_record).not_to respond_to(:persisted_string)
     end
   end
 
