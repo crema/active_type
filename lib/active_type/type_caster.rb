@@ -29,8 +29,12 @@ module ActiveType
         end
       when :timestamp, :datetime
         time = native_type_cast_from_user(value)
-        if time && ActiveRecord::Base.time_zone_aware_attributes
-          time = ActiveSupport::TimeWithZone.new(nil, Time.zone, time)
+        if time && !time.is_a?(ActiveSupport::TimeWithZone) && ActiveRecord::Base.time_zone_aware_attributes
+          time = if ActiveRecord::Base.default_timezone == :utc
+                   ActiveSupport::TimeWithZone.new(time, Time.zone)
+                 else
+                   ActiveSupport::TimeWithZone.new(nil, Time.zone, time)
+                 end
         end
         time
       else
